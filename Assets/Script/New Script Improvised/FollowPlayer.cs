@@ -5,9 +5,9 @@ using UnityEngine;
 public class FollowPlayer : MonoBehaviour
 {
     public Transform player; // Reference to the player
-    public float followRadius = 5f; // Radius within which the character will follow the player
     public float followSpeed = 2f; // Speed at which the character will follow the player
-    public Vector3 offset = new Vector3(-2f, 0, 0); // Offset from the player
+    public float characterSpeed = 8f; // Speed of the unchosen character
+    public float xOffset = 8f; // Offset from the player on the X-axis
 
     private Rigidbody2D rb;
 
@@ -35,16 +35,10 @@ public class FollowPlayer : MonoBehaviour
     {
         if (player != null)
         {
-            // Calculate the distance between the character and the player
-            float distance = Vector3.Distance(transform.position, player.position);
-
-            if (distance <= followRadius)
-            {
-                // Move the character towards the player
-                Vector3 targetPosition = player.position + offset;
-                Vector3 moveDirection = (targetPosition - transform.position).normalized;
-                rb.MovePosition(transform.position + moveDirection * followSpeed * Time.deltaTime);
-            }
+            // Calculate the target position exactly behind the player
+            Vector3 targetPosition = new Vector3(player.position.x + xOffset, player.position.y, transform.position.z);
+            Vector3 moveDirection = (targetPosition - transform.position).normalized;
+            rb.MovePosition(transform.position + moveDirection * characterSpeed * Time.deltaTime);
         }
     }
 }
