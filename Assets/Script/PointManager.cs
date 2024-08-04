@@ -13,6 +13,7 @@ public class PointManager : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
+			totalPoints = -3;
             DontDestroyOnLoad(gameObject); // Optional, if you want to persist across scenes
         }
     }
