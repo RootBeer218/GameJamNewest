@@ -719,6 +719,7 @@ MonoBehaviour:
   - {fileID: 7414543344167962320, guid: e93a7fa9fbad62048a589f7790f3aaa6, type: 3}
   - {fileID: 7414543344167962320, guid: 31cc790093b76f94ebcc378c45c6e98a, type: 3}
   detachmentRadius: 5
+  unchosenCharacterSpawnChance: 25
 --- !u!4 &429465508
 Transform:
   m_ObjectHideFlags: 0

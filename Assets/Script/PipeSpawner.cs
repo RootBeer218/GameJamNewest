@@ -39,6 +39,9 @@ public class PipeSpawner : MonoBehaviour
     // Reference to GameManager
     private GameManager gameManager;
 
+    // Spawn chance for unchosen characters
+    public float unchosenCharacterSpawnChance = 25f; // Adjust this value in the editor
+
     private void Start()
     {
         originalPipeSpeed = pipeSpeed; // Store the original pipe speed
@@ -227,8 +230,8 @@ public class PipeSpawner : MonoBehaviour
             StartCoroutine(DestroyPipeAfterTime(dpower, 10f));
         }
 
-        // Spawn Unchosen Characters only if there are remaining unchosen characters
-        if (remainingUnchosenCharacters.Count > 0)
+        // Spawn Unchosen Characters with a chance
+        if (remainingUnchosenCharacters.Count > 0 && Random.value <= unchosenCharacterSpawnChance / 100f)
         {
             SpawnUnchosenCharacters(spawnPos, pipe);
         }
