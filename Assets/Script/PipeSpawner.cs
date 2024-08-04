@@ -44,8 +44,22 @@ public class PipeSpawner : MonoBehaviour
         originalPipeSpeed = pipeSpeed; // Store the original pipe speed
         gameManager = FindObjectOfType<GameManager>(); // Find GameManager instance
         StartCoroutine(FindAndAssignPlayer()); // Find and assign the player
-        SpawnPipe();
         StartCoroutine(SpawnPipeCoroutine());
+
+        // Initialize the remainingUnchosenCharacters with unchosen characters from GameManager
+        if (gameManager != null)
+        {
+            remainingUnchosenCharacters = new List<GameObject>(gameManager.GetUnchosenCharacters());
+
+            if (remainingUnchosenCharacters.Count != 3)
+            {
+                Debug.LogError("Ensure the GameManager provides exactly 3 unchosen characters.");
+            }
+        }
+        else
+        {
+            Debug.LogError("GameManager not found.");
+        }
     }
 
     private IEnumerator FindAndAssignPlayer()
@@ -56,7 +70,6 @@ public class PipeSpawner : MonoBehaviour
             player = GameObject.FindGameObjectWithTag("Player")?.transform;
             yield return null;
         }
-
     }
 
     private IEnumerator SpawnPipeCoroutine()
@@ -83,7 +96,6 @@ public class PipeSpawner : MonoBehaviour
                 if (character != null)
                 {
                     float distance = Vector2.Distance(player.position, character.transform.position);
-
 
                     if (distance < detachmentRadius)
                     {
@@ -215,11 +227,10 @@ public class PipeSpawner : MonoBehaviour
             StartCoroutine(DestroyPipeAfterTime(dpower, 10f));
         }
 
-        // Spawn Unchosen Characters only if they haven't been spawned yet
-        if (!charactersSpawned)
+        // Spawn Unchosen Characters only if there are remaining unchosen characters
+        if (remainingUnchosenCharacters.Count > 0)
         {
             SpawnUnchosenCharacters(spawnPos, pipe);
-            charactersSpawned = true; // Ensure characters are spawned only once
         }
     }
 
@@ -231,91 +242,79 @@ public class PipeSpawner : MonoBehaviour
 
     private void SpawnUnchosenCharacters(Vector3 spawnPos, GameObject pipe)
     {
-        // Get unchosen characters from GameManager
-        GameManager gameManager = FindObjectOfType<GameManager>();
-        if (gameManager != null)
+        // Randomly select 1 unique character
+        if (remainingUnchosenCharacters.Count > 0)
         {
-            remainingUnchosenCharacters = new List<GameObject>(gameManager.GetUnchosenCharacters());
-        }
-        else
-        {
-            Debug.LogError("GameManager not found.");
-            return;
-        }
+            int randomIndex = Random.Range(0, remainingUnchosenCharacters.Count);
+            GameObject unchosenCharacter = remainingUnchosenCharacters[randomIndex];
+            remainingUnchosenCharacters.RemoveAt(randomIndex); // Remove to ensure uniqueness
 
-        // Randomly select 3 unique characters
-        if (remainingUnchosenCharacters.Count >= 3)
-        {
-            for (int i = 0; i < 3; i++)
+            GameObject character = Instantiate(unchosenCharacter, spawnPos, Quaternion.identity);
+            character.transform.parent = pipe.transform;
+
+            // Setup the character
+            character.tag = "Untagged";
+
+            // Apply modifications only if in the main scene
+            if (SceneManager.GetActiveScene().name == "SampleScene")
             {
-                int randomIndex = Random.Range(0, remainingUnchosenCharacters.Count);
-                GameObject unchosenCharacter = remainingUnchosenCharacters[randomIndex];
-                remainingUnchosenCharacters.RemoveAt(randomIndex); // Remove to ensure uniqueness
-
-                GameObject character = Instantiate(unchosenCharacter, spawnPos, Quaternion.identity);
-                character.transform.parent = pipe.transform;
-
                 // Setup the character
                 character.tag = "Untagged";
 
-                // Apply modifications only if in the main scene
-                if (SceneManager.GetActiveScene().name == "SampleScene")
+                // Disable FlyBehaviour script
+                FlyBehaviour flyBehaviour = character.GetComponent<FlyBehaviour>();
+                if (flyBehaviour != null)
                 {
-
-                    // Setup the character
-                    character.tag = "Untagged";
-
-                    // Disable FlyBehaviour script
-                    FlyBehaviour flyBehaviour = character.GetComponent<FlyBehaviour>();
-                    if (flyBehaviour != null)
-                    {
-                        flyBehaviour.enabled = false;
-                    }
-                    else
-                    {
-                        Debug.LogError("FlyBehaviour script is missing on the unchosen character prefab.");
-                    }
-
-                    // Set gravity scale to 0
-                    Rigidbody2D rb = character.GetComponent<Rigidbody2D>();
-                    if (rb != null)
-                    {
-                        rb.gravityScale = 0;
-                        rb.constraints = RigidbodyConstraints2D.FreezeRotation;
-                    }
-                    else
-                    {
-                        Debug.LogError("Rigidbody2D is missing on the unchosen character prefab.");
-                    }
-
-                    // Disable CircleCollider2D
-                    CircleCollider2D circleCollider = character.GetComponent<CircleCollider2D>();
-                    if (circleCollider != null)
-                    {
-                        circleCollider.enabled = false; // Disable the collider
-                    }
-                    else
-                    {
-                        Debug.LogError("CircleCollider2D is missing on the unchosen character prefab.");
-                    }
-
-                    // Enable FollowPlayer script
-                    FollowPlayer followPlayer = character.GetComponent<FollowPlayer>();
-                    if (followPlayer != null)
-                    {
-                        followPlayer.player = player.transform; // Set the player reference
-                        followPlayer.enabled = true; // Initially enable
-                    }
-                    else
-                    {
-                        Debug.LogError("FollowPlayer script is missing on the unchosen character prefab.");
-                    }
+                    flyBehaviour.enabled = false;
+                }
+                else
+                {
+                    Debug.LogError("FlyBehaviour script is missing on the unchosen character prefab.");
                 }
 
-                // Add to the list of spawned unchosen characters
-                spawnedUnchosenCharacters.Add(character);
-                spawnedCharactersSet.Add(character); // Mark this character as spawned
+                // Set gravity scale to 0
+                Rigidbody2D rb = character.GetComponent<Rigidbody2D>();
+                if (rb != null)
+                {
+                    rb.gravityScale = 0;
+                    rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+                }
+                else
+                {
+                    Debug.LogError("Rigidbody2D is missing on the unchosen character prefab.");
+                }
+
+                // Disable CircleCollider2D
+                CircleCollider2D circleCollider = character.GetComponent<CircleCollider2D>();
+                if (circleCollider != null)
+                {
+                    circleCollider.enabled = false; // Disable the collider
+                }
+                else
+                {
+                    Debug.LogError("CircleCollider2D is missing on the unchosen character prefab.");
+                }
+
+                // Enable FollowPlayer script
+                FollowPlayer followPlayer = character.GetComponent<FollowPlayer>();
+                if (followPlayer != null)
+                {
+                    followPlayer.player = player.transform; // Set the player reference
+                    followPlayer.enabled = true; // Initially enable
+                }
+                else
+                {
+                    Debug.LogError("FollowPlayer script is missing on the unchosen character prefab.");
+                }
             }
+
+            // Add to the list of spawned unchosen characters
+            spawnedUnchosenCharacters.Add(character);
+            spawnedCharactersSet.Add(character); // Mark this character as spawned
+        }
+        else
+        {
+            charactersSpawned = true; // Ensure characters are spawned only once
         }
     }
 
@@ -325,6 +324,7 @@ public class PipeSpawner : MonoBehaviour
         _spawnedPipes.Remove(pipe);
         Destroy(pipe);
     }
+
     // Draw the detachment radius in the Scene view
     private void OnDrawGizmos()
     {
@@ -335,4 +335,3 @@ public class PipeSpawner : MonoBehaviour
         }
     }
 }
-
