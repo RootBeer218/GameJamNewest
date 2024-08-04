@@ -283,6 +283,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _velocity: 4
   _rotationSpeed: 10
+  particlePrefabName: SmokeShort
+  particleOffset: {x: -0.5, y: -1, z: -1}
 --- !u!114 &2637924914756609863
 MonoBehaviour:
   m_ObjectHideFlags: 0

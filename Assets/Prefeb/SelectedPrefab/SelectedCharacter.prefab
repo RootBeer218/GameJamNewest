@@ -283,6 +283,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _velocity: 4
   _rotationSpeed: 10
+  particlePrefabPath: Particles/YourParticlePrefabName
 --- !u!114 &4346087214225185253
 MonoBehaviour:
   m_ObjectHideFlags: 0
