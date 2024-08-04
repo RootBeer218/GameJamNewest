@@ -325,4 +325,4 @@ MonoBehaviour:
   player: {fileID: 0}
   followSpeed: 2
   characterSpeed: 8
-  xOffset: 8
+  xOffset: -9

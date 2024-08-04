@@ -44,6 +44,7 @@ public class PipeSpawner : MonoBehaviour
         originalPipeSpeed = pipeSpeed; // Store the original pipe speed
         gameManager = FindObjectOfType<GameManager>(); // Find GameManager instance
         StartCoroutine(FindAndAssignPlayer()); // Find and assign the player
+        SpawnPipe();
         StartCoroutine(SpawnPipeCoroutine());
     }
 
@@ -55,6 +56,7 @@ public class PipeSpawner : MonoBehaviour
             player = GameObject.FindGameObjectWithTag("Player")?.transform;
             yield return null;
         }
+
     }
 
     private IEnumerator SpawnPipeCoroutine()
@@ -81,6 +83,7 @@ public class PipeSpawner : MonoBehaviour
                 if (character != null)
                 {
                     float distance = Vector2.Distance(player.position, character.transform.position);
+
 
                     if (distance < detachmentRadius)
                     {
@@ -215,7 +218,7 @@ public class PipeSpawner : MonoBehaviour
         // Spawn Unchosen Characters only if they haven't been spawned yet
         if (!charactersSpawned)
         {
-            SpawnUnchosenCharacters();
+            SpawnUnchosenCharacters(spawnPos, pipe);
             charactersSpawned = true; // Ensure characters are spawned only once
         }
     }
@@ -226,9 +229,10 @@ public class PipeSpawner : MonoBehaviour
         canPUP = spawnnum <= spawnchance;
     }
 
-    private void SpawnUnchosenCharacters()
+    private void SpawnUnchosenCharacters(Vector3 spawnPos, GameObject pipe)
     {
         // Get unchosen characters from GameManager
+        GameManager gameManager = FindObjectOfType<GameManager>();
         if (gameManager != null)
         {
             remainingUnchosenCharacters = new List<GameObject>(gameManager.GetUnchosenCharacters());
@@ -239,32 +243,28 @@ public class PipeSpawner : MonoBehaviour
             return;
         }
 
-        // Ensure there are enough pipes to place characters on
-        if (remainingUnchosenCharacters.Count >= 3 && _spawnedPipes.Count >= 3)
+        // Randomly select 3 unique characters
+        if (remainingUnchosenCharacters.Count >= 3)
         {
-            List<GameObject> availablePipes = new List<GameObject>(_spawnedPipes); // Create a copy of the list
-
             for (int i = 0; i < 3; i++)
             {
                 int randomIndex = Random.Range(0, remainingUnchosenCharacters.Count);
                 GameObject unchosenCharacter = remainingUnchosenCharacters[randomIndex];
                 remainingUnchosenCharacters.RemoveAt(randomIndex); // Remove to ensure uniqueness
 
-                int pipeIndex = Random.Range(0, availablePipes.Count);
-                GameObject pipe = availablePipes[pipeIndex];
-                availablePipes.RemoveAt(pipeIndex); // Remove the selected pipe
-
-                Vector3 spawnPosition = pipe.transform.position;
-                GameObject character = Instantiate(unchosenCharacter, spawnPosition, Quaternion.identity);
+                GameObject character = Instantiate(unchosenCharacter, spawnPos, Quaternion.identity);
                 character.transform.parent = pipe.transform;
 
-               
+                // Setup the character
+                character.tag = "Untagged";
 
                 // Apply modifications only if in the main scene
                 if (SceneManager.GetActiveScene().name == "SampleScene")
                 {
+
                     // Setup the character
                     character.tag = "Untagged";
+
                     // Disable FlyBehaviour script
                     FlyBehaviour flyBehaviour = character.GetComponent<FlyBehaviour>();
                     if (flyBehaviour != null)
@@ -325,7 +325,6 @@ public class PipeSpawner : MonoBehaviour
         _spawnedPipes.Remove(pipe);
         Destroy(pipe);
     }
-
     // Draw the detachment radius in the Scene view
     private void OnDrawGizmos()
     {
@@ -336,3 +335,4 @@ public class PipeSpawner : MonoBehaviour
         }
     }
 }
+
